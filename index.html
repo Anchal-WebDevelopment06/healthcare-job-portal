@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MediHire – Healthcare Job Portal</title>
+  <meta name="description" content="Find top healthcare jobs: Doctors, Nurses, Pharmacists, Lab Technicians, Medical Assistants and more. MediHire connects medical professionals with leading hospitals." />
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'Outfit', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50:  '#ecfeff',
+              100: '#cffafe',
+              200: '#a5f3fc',
+              300: '#67e8f9',
+              400: '#22d3ee',
+              500: '#06b6d4',
+              600: '#0891b2',
+              700: '#0e7490',
+              800: '#155e75',
+              900: '#164e63',
+            }
+          },
+          backdropBlur: {
+            xs: '2px',
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+
+  <!-- Custom Styles -->
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+
+<body class="min-h-screen bg-slate-950 text-slate-100 font-sans transition-colors duration-300">
+
+  <!-- ═══════════════════════════ TOAST CONTAINER ═══════════════════════════ -->
+  <div id="toast-container" class="fixed top-6 right-6 z-[9999] flex flex-col gap-3 pointer-events-none"></div>
+
+  <!-- ═══════════════════════════ NAVBAR ═══════════════════════════ -->
+  <nav id="navbar" class="glass-nav fixed top-0 left-0 right-0 z-50 px-4 md:px-8 py-3 flex items-center justify-between">
+    <!-- Logo -->
+    <a href="javascript:void(0)" id="nav-logo" class="flex items-center gap-2.5 group cursor-pointer" onclick="handleLogoClick(event)">
+      <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/30">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+      </div>
+      <div class="flex flex-col leading-tight">
+        <span class="font-bold text-lg bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">MediHire</span>
+        <span class="text-[10px] text-slate-400 font-medium tracking-wider uppercase -mt-0.5">Healthcare Jobs</span>
+      </div>
+    </a>
+
+    <!-- Nav Links (Desktop) -->
+    <ul class="hidden md:flex items-center gap-1">
+      <li><button onclick="navigate('home')" class="nav-link" data-page="home">Home</button></li>
+      <li><button onclick="navigate('jobs')" class="nav-link" data-page="jobs">Browse Jobs</button></li>
+      <li><button onclick="navigate('dashboard')" class="nav-link" data-page="dashboard">Dashboard</button></li>
+      <li id="nav-admin-link" class="hidden"><button onclick="navigate('admin')" class="nav-link" data-page="admin">Admin Panel</button></li>
+      <li><button onclick="navigate('contact')" class="nav-link" data-page="contact">Contact</button></li>
+    </ul>
+
+    <!-- Right Controls -->
+    <div class="flex items-center gap-3">
+      <!-- Theme Toggle -->
+      <button id="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark/light mode"
+        class="w-9 h-9 rounded-xl glass-btn flex items-center justify-center text-slate-300 hover:text-cyan-400 transition-colors">
+        <i data-lucide="sun" class="w-4 h-4 hidden" id="icon-sun"></i>
+        <i data-lucide="moon" class="w-4 h-4" id="icon-moon"></i>
+      </button>
+
+      <!-- Auth Button / User Badge -->
+      <div id="auth-section" class="flex items-center gap-2">
+        <!-- Shown when logged out -->
+        <div id="auth-loggedout" class="flex items-center gap-2">
+          <button onclick="navigate('login')" class="px-4 py-2 text-sm font-medium text-slate-300 hover:text-cyan-400 transition-colors">Sign In</button>
+          <button onclick="navigate('register')" class="px-4 py-2 text-sm font-semibold rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/50 transition-shadow">Get Started</button>
+        </div>
+        <!-- Shown when logged in -->
+        <div id="auth-loggedin" class="hidden items-center gap-3">
+          <div class="flex items-center gap-2 px-3 py-1.5 rounded-xl glass-card cursor-pointer" onclick="navigate('dashboard')">
+            <div id="user-avatar" class="w-7 h-7 rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center text-white text-xs font-bold">U</div>
+            <span id="user-name-display" class="text-sm font-medium text-slate-200">User</span>
+            <span id="user-role-badge" class="text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-400 font-medium uppercase tracking-wide">Candidate</span>
+          </div>
+          <button onclick="handleLogout()" class="px-3 py-1.5 text-sm font-medium rounded-xl border border-slate-700 text-slate-400 hover:border-red-500/50 hover:text-red-400 transition-colors">Sign Out</button>
+        </div>
+      </div>
+
+      <!-- Mobile Menu Button -->
+      <button id="mobile-menu-btn" onclick="toggleMobileMenu()" class="md:hidden w-9 h-9 rounded-xl glass-btn flex items-center justify-center">
+        <i data-lucide="menu" class="w-4 h-4"></i>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Mobile Menu -->
+  <div id="mobile-menu" class="fixed top-[64px] left-0 right-0 z-40 hidden glass-nav border-t border-slate-800/50 p-4">
+    <ul class="flex flex-col gap-1">
+      <li><button onclick="navigate('home'); toggleMobileMenu()" class="mobile-nav-link w-full">🏠 Home</button></li>
+      <li><button onclick="navigate('jobs'); toggleMobileMenu()" class="mobile-nav-link w-full">💼 Browse Jobs</button></li>
+      <li><button onclick="navigate('dashboard'); toggleMobileMenu()" class="mobile-nav-link w-full">📊 Dashboard</button></li>
+      <li id="mobile-admin-link" class="hidden"><button onclick="navigate('admin'); toggleMobileMenu()" class="mobile-nav-link w-full">⚙️ Admin Panel</button></li>
+      <li><button onclick="navigate('contact'); toggleMobileMenu()" class="mobile-nav-link w-full">📧 Contact</button></li>
+    </ul>
+  </div>
+
+  <!-- ═══════════════════════════ MAIN CONTENT AREA ═══════════════════════════ -->
+  <main id="app" class="pt-16">
+
+    <!-- ═══ HOME VIEW ═══ -->
+    <div id="view-home" class="view-container"></div>
+
+    <!-- ═══ JOBS VIEW ═══ -->
+    <div id="view-jobs" class="view-container hidden"></div>
+
+    <!-- ═══ DASHBOARD VIEW ═══ -->
+    <div id="view-dashboard" class="view-container hidden"></div>
+
+    <!-- ═══ ADMIN VIEW ═══ -->
+    <div id="view-admin" class="view-container hidden"></div>
+
+    <!-- ═══ CONTACT VIEW ═══ -->
+    <div id="view-contact" class="view-container hidden"></div>
+
+    <!-- ═══ LOGIN VIEW ═══ -->
+    <div id="view-login" class="view-container hidden"></div>
+
+    <!-- ═══ REGISTER VIEW ═══ -->
+    <div id="view-register" class="view-container hidden"></div>
+
+  </main>
+
+  <!-- ═══════════════════════════ FOOTER ═══════════════════════════ -->
+  <footer id="app-footer" class="border-t border-slate-800/50 mt-16">
+    <div class="max-w-7xl mx-auto px-6 py-12">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <!-- Brand -->
+        <div class="md:col-span-2">
+          <div class="flex items-center gap-2.5 mb-4">
+            <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+            </div>
+            <span class="font-bold text-lg bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">MediHire</span>
+          </div>
+          <p class="text-slate-400 text-sm leading-relaxed max-w-xs">Connecting healthcare professionals with leading hospitals and medical facilities worldwide. Your next career breakthrough starts here.</p>
+          <div class="flex items-center gap-3 mt-4">
+            <div class="w-8 h-8 rounded-lg glass-btn flex items-center justify-center text-slate-400 hover:text-cyan-400 cursor-pointer transition-colors">
+              <i data-lucide="twitter" class="w-4 h-4"></i>
+            </div>
+            <div class="w-8 h-8 rounded-lg glass-btn flex items-center justify-center text-slate-400 hover:text-cyan-400 cursor-pointer transition-colors">
+              <i data-lucide="linkedin" class="w-4 h-4"></i>
+            </div>
+            <div class="w-8 h-8 rounded-lg glass-btn flex items-center justify-center text-slate-400 hover:text-cyan-400 cursor-pointer transition-colors">
+              <i data-lucide="instagram" class="w-4 h-4"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Links -->
+        <div>
+          <h4 class="text-sm font-semibold text-slate-200 mb-4 uppercase tracking-wider">Quick Links</h4>
+          <ul class="space-y-2">
+            <li><button onclick="navigate('home')" class="text-slate-400 hover:text-cyan-400 text-sm transition-colors">Home</button></li>
+            <li><button onclick="navigate('jobs')" class="text-slate-400 hover:text-cyan-400 text-sm transition-colors">Browse Jobs</button></li>
+            <li><button onclick="navigate('dashboard')" class="text-slate-400 hover:text-cyan-400 text-sm transition-colors">Dashboard</button></li>
+            <li><button onclick="navigate('contact')" class="text-slate-400 hover:text-cyan-400 text-sm transition-colors">Contact Us</button></li>
+          </ul>
+        </div>
+
+        <!-- Specialties -->
+        <div>
+          <h4 class="text-sm font-semibold text-slate-200 mb-4 uppercase tracking-wider">Specialties</h4>
+          <ul class="space-y-2">
+            <li><span class="text-slate-400 text-sm">Doctors & Physicians</span></li>
+            <li><span class="text-slate-400 text-sm">Nursing & Midwifery</span></li>
+            <li><span class="text-slate-400 text-sm">Pharmacy</span></li>
+            <li><span class="text-slate-400 text-sm">Lab & Diagnostics</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="mt-10 pt-6 border-t border-slate-800/50 flex flex-col md:flex-row items-center justify-between gap-4">
+        <p class="text-slate-500 text-xs">© 2025 MediHire. All rights reserved. | Healthcare Job Portal</p>
+        <p class="text-slate-600 text-xs">⚕️ Powered by localStorage • Built with Tailwind CSS & Vanilla JS</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ═══════════════════════════ JOB DETAIL MODAL ═══════════════════════════ -->
+  <div id="job-modal" class="fixed inset-0 z-[9000] hidden items-center justify-center p-4">
+    <div class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm" onclick="closeJobModal()"></div>
+    <div id="job-modal-content" class="relative glass-modal max-w-2xl w-full max-h-[90vh] overflow-y-auto rounded-2xl p-6">
+      <!-- Populated by JS -->
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════ ADMIN JOB MODAL ═══════════════════════════ -->
+  <div id="admin-modal" class="fixed inset-0 z-[9000] hidden items-center justify-center p-4">
+    <div class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm" onclick="closeAdminModal()"></div>
+    <div class="relative glass-modal max-w-xl w-full max-h-[90vh] overflow-y-auto rounded-2xl p-6">
+      <div class="flex items-center justify-between mb-6">
+        <h2 id="admin-modal-title" class="text-xl font-bold text-slate-100">Add New Job</h2>
+        <button onclick="closeAdminModal()" class="w-8 h-8 rounded-lg glass-btn flex items-center justify-center text-slate-400 hover:text-slate-200">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+      <form id="admin-job-form" onsubmit="handleAdminJobSubmit(event)" class="space-y-4">
+        <input type="hidden" id="edit-job-id" value="" />
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-medium text-slate-400 mb-1.5 uppercase tracking-wide">Job Title *</label>
+            <input type="text" id="job-title-input" required placeholder="e.g. Senior Cardiologist" class="glass-input w-full" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-400 mb-1.5 uppercase tracking-wide">Hospital / Organization *</label>
+            <input type="text" id="job-hospital-input" required placeholder="e.g. Mayo General Hospital" class="glass-input w-full" />
+          </div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-medium text-slate-400 mb-1.5 uppercase tracking-wide">Location *</label>
+            <input type="text" id="job-location-input" required placeholder="e.g. New York, NY" class="glass-input w-full" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-400 mb-1.5 uppercase tracking-wide">Salary Range</label>
+            <input type="text" id="job-salary-input" placeholder="e.g. $120k - $150k/yr" class="glass-input w-full" />
+          </div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-medium text-slate-400 mb-1.5 uppercase tracking-wide">Category *</label>
+            <select id="job-category-input" required class="glass-input w-full">
+              <option value="">Select Category</option>
+              <option value="Doctors & Physicians">Doctors & Physicians</option>
+              <option value="Nursing & Midwifery">Nursing & Midwifery</option>
+              <option value="Pharmacy">Pharmacy</option>
+              <option value="Radiology & Imaging">Radiology & Imaging</option>
+              <option value="Laboratory & Diagnostics">Laboratory & Diagnostics</option>
+              <option value="Medical Assistants">Medical Assistants</option>
+              <option value="Physiotherapy">Physiotherapy</option>
+              <option value="Mental Health">Mental Health</option>
+              <option value="Administration">Administration</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-400 mb-1.5 uppercase tracking-wide">Job Type *</label>
+            <select id="job-type-input" required class="glass-input w-full">
+              <option value="">Select Type</option>
+              <option value="Full-time">Full-time</option>
+              <option value="Part-time">Part-time</option>
+              <option value="Contract">Contract</option>
+              <option value="Internship">Internship</option>
+              <option value="Locum">Locum</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-medium text-slate-400 mb-1.5 uppercase tracking-wide">Experience Required</label>
+            <input type="text" id="job-experience-input" placeholder="e.g. 5+ years" class="glass-input w-full" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-400 mb-1.5 uppercase tracking-wide">Deadline</label>
+            <input type="date" id="job-deadline-input" class="glass-input w-full" />
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-400 mb-1.5 uppercase tracking-wide">Job Description *</label>
+          <textarea id="job-desc-input" required rows="4" placeholder="Describe responsibilities, requirements, and benefits..." class="glass-input w-full resize-none"></textarea>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-400 mb-1.5 uppercase tracking-wide">Required Skills (comma-separated)</label>
+          <input type="text" id="job-skills-input" placeholder="e.g. Cardiology, ACLS, EHR Systems, Patient Care" class="glass-input w-full" />
+        </div>
+        <div class="flex gap-3 pt-2">
+          <button type="submit" class="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-semibold hover:shadow-lg hover:shadow-cyan-500/30 transition-shadow">
+            Save Job
+          </button>
+          <button type="button" onclick="closeAdminModal()" class="px-6 py-2.5 rounded-xl glass-btn text-slate-300 font-medium">
+            Cancel
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════ APPLICATION MODAL ═══════════════════════════ -->
+  <div id="apply-modal" class="fixed inset-0 z-[9000] hidden items-center justify-center p-4">
+    <div class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm" onclick="closeApplyModal()"></div>
+    <div class="relative glass-modal max-w-md w-full rounded-2xl p-6">
+      <div class="flex items-center justify-between mb-5">
+        <h2 class="text-xl font-bold text-slate-100">Apply for Position</h2>
+        <button onclick="closeApplyModal()" class="w-8 h-8 rounded-lg glass-btn flex items-center justify-center text-slate-400 hover:text-slate-200">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+      <div id="apply-job-preview" class="mb-4 p-3 rounded-xl bg-cyan-500/10 border border-cyan-500/20"></div>
+      <form id="apply-form" onsubmit="submitApplication(event)" class="space-y-4">
+        <input type="hidden" id="apply-job-id" value="" />
+        <div>
+          <label class="block text-xs font-medium text-slate-400 mb-1.5 uppercase tracking-wide">Cover Letter (Optional)</label>
+          <textarea id="apply-cover-letter" rows="4" placeholder="Tell us why you're the perfect fit for this role..." class="glass-input w-full resize-none"></textarea>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-400 mb-1.5 uppercase tracking-wide">Years of Experience</label>
+          <input type="text" id="apply-experience" placeholder="e.g. 5 years" class="glass-input w-full" />
+        </div>
+        <button type="submit" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-semibold hover:shadow-lg hover:shadow-cyan-500/30 transition-shadow">
+          Submit Application ✨
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/mockData.js"></script>
+  <script src="js/store.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/admin.js"></script>
+  <script src="js/app.js"></script>
+
+</body>
+</html>
